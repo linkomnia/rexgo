@@ -5,6 +5,8 @@ rexgo is a pure [Go](http://golang.org) implementation of a
 [RexPro version 0](https://github.com/tinkerpop/rexster/wiki/RexPro-Messages/46f76da31149b2a3a68fb470d28157e23739a66d)
 protocol.
 
+**NOTE** only RexPro version 0 is implemented. Rexster 2.4.0 or newer is not supported.
+
 Install using:
 
 	go get github.com/linkomnia/rexgo
