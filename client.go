@@ -8,7 +8,10 @@ The actual RexPro version 0 wire protocol is implemented in the package
 "net/rexpro0".
 
 Note that only RexPro version 0 is implemented at this time. This means Rexster
-Server 2.4.0 and newer are not supported.
+2.4.0 and newer are not supported.
+
+This package uses the excellent codec from ugorji for MsgPack serialization:
+https://github.com/ugorji/go/tree/master/codec
 
 For more information about the Rexster graph database and the RexPro protocol,
 see: https://github.com/tinkerpop/rexster/wiki
