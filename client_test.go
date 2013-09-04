@@ -23,11 +23,11 @@ func TestSession(t *testing.T) {
 		t.Fatalf("client.NewSession() returned %v", err)
 	}
 
-	obj, err := s.Script(`[name:var1]`, map[string]interface{}{"var1": "value1"})
+	obj, err := s.Execute(`[name:var1]`, map[string]interface{}{"var1": "value1"})
 	if err != nil {
 		t.Fatalf("session.Script() returned %v", err)
 	}
-	if result, ok := obj.(map[string]interface{}); ok {
+	if result, ok := obj[0].(map[string]interface{}); ok {
 		if result["name"] != "value1" {
 			t.Errorf(`script result: "name" expected to have "value1", got %v`, result["name"])
 		}
@@ -35,11 +35,11 @@ func TestSession(t *testing.T) {
 		t.Errorf(`script result expected to be a map, got: %#v`, obj)
 	}
 
-	obj, err = s.Script(`[name2:var1]`, nil)
+	obj, err = s.Execute(`[name2:var1]`, nil)
 	if err != nil {
 		t.Fatalf("session.Script() returned %v", err)
 	}
-	if result, ok := obj.(map[string]interface{}); ok {
+	if result, ok := obj[0].(map[string]interface{}); ok {
 		if result["name2"] != "value1" {
 			t.Errorf(`script result: "name2" expected to have "value1", got %v`, result["name"])
 		}
@@ -64,12 +64,11 @@ func TestGraphOfGods(t *testing.T) {
 	rx.SetGraphName("graph")
 
 	bindings := map[string]interface{}{"godname": "saturn"}
-	obj, err := rx.Script(`g.V('name',godname).in('father').in('father').name`, bindings)
+	obj, err := rx.Execute(`g.V('name',godname).in('father').in('father').name`, bindings)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	result := obj.([]interface{})
-	if result[0] != "hercules" {
+	if obj[0] != "hercules" {
 		t.Errorf(`Saturn's grandchild expected to be Hercules, got: %#v`, obj)
 	}
 

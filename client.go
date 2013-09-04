@@ -141,7 +141,7 @@ func (s *Session) Close() error {
 //  if result[0] != "hercules" {
 //      // uh-oh
 //  }
-func (client *Client) Script(script string, bindings map[string]interface{}) (results interface{}, err error) {
+func (client *Client) Execute(script string, bindings map[string]interface{}) (results []interface{}, err error) {
 	meta := client.newMetaMap()
 	args := []interface{}{"groovy", script, bindings}
 
@@ -150,7 +150,12 @@ func (client *Client) Script(script string, bindings map[string]interface{}) (re
 		return nil, err
 	}
 
-	return args[0], nil
+	results, ok := args[0].([]interface{})
+	if !ok {
+		results = make([]interface{}, 1)
+		results[0] = args[0]
+	}
+	return results, nil
 }
 
 func (s *Session) newMetaMap() rexpro0.MetaMap {
@@ -176,7 +181,7 @@ func (s *Session) newMetaMap() rexpro0.MetaMap {
 // Script sends the Gremlin script to the Rexster server, waits for it to
 // complete, and returns the results. Variable bindings are preserved in the
 // same session.
-func (s *Session) Script(script string, bindings map[string]interface{}) (results interface{}, err error) {
+func (s *Session) Execute(script string, bindings map[string]interface{}) (results []interface{}, err error) {
 	meta := s.newMetaMap()
 	args := []interface{}{"groovy", script, bindings}
 
@@ -188,7 +193,12 @@ func (s *Session) Script(script string, bindings map[string]interface{}) (result
 		return nil, err
 	}
 
-	return args[0], nil
+	results, ok := args[0].([]interface{})
+	if !ok {
+		results = make([]interface{}, 1)
+		results[0] = args[0]
+	}
+	return results, nil
 }
 
 func (s *Session) SetGraphName(graphName string) error {
