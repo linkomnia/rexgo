@@ -132,12 +132,31 @@ func (s *Session) Close() error {
 	return err
 }
 
-// Script sends the Gremlin script to the Rexster server, waits for it to complete, and returns the results.
+func decodeVerticesAndEdges(results []interface{}) {
+	for i, o := range results {
+		switch o := o.(type) {
+		case map[string]interface{}:
+			switch o["_type"] {
+			case "vertex":
+				if v := toVertex(o); v != nil {
+					results[i] = v
+				}
+			case "edge":
+				if e := toEdge(o); e != nil {
+					results[i] = e
+				}
+			}
+		case []interface{}:
+			decodeVerticesAndEdges(o)
+		}
+	}
+}
+
+// Execute sends the Gremlin script to the Rexster server, waits for it to complete, and returns the results.
 //
 // Example:
 //  bindings := map[string]interface{}{"godname": "saturn"}
-//  obj, err := rx.Script(`g.V('name',godname).in('father').in('father').name`, bindings)
-//  result := obj.([]interface{})
+//  result, err := rx.Script(`g.V('name',godname).in('father').in('father').name`, bindings)
 //  if result[0] != "hercules" {
 //      // uh-oh
 //  }
@@ -154,6 +173,8 @@ func (client *Client) Execute(script string, bindings map[string]interface{}) (r
 	if !ok {
 		results = make([]interface{}, 1)
 		results[0] = args[0]
+	} else {
+		decodeVerticesAndEdges(results)
 	}
 	return results, nil
 }
@@ -178,7 +199,7 @@ func (s *Session) newMetaMap() rexpro0.MetaMap {
 	return meta
 }
 
-// Script sends the Gremlin script to the Rexster server, waits for it to
+// Execute sends the Gremlin script to the Rexster server, waits for it to
 // complete, and returns the results. Variable bindings are preserved in the
 // same session.
 func (s *Session) Execute(script string, bindings map[string]interface{}) (results []interface{}, err error) {
@@ -197,6 +218,8 @@ func (s *Session) Execute(script string, bindings map[string]interface{}) (resul
 	if !ok {
 		results = make([]interface{}, 1)
 		results[0] = args[0]
+	} else {
+		decodeVerticesAndEdges(results)
 	}
 	return results, nil
 }
@@ -219,4 +242,49 @@ func (s *Session) SetGraphObjName(objName string) error {
 	s.GraphObjName = objName
 	s.mutex.Unlock()
 	return nil
+}
+
+// Vertex represents a vertex object as returned by Gremlin.
+type Vertex struct {
+	Id   string
+	Prop map[string]interface{}
+}
+
+func toVertex(vmap map[string]interface{}) *Vertex {
+	vid, ok := vmap["_id"].(string)
+	if !ok {
+		return nil
+	}
+	vprop, ok := vmap["_properties"].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	return &Vertex{vid, vprop}
+}
+
+// Edge represents an edge object as returned by Gremlin.
+type Edge struct {
+	Id          string
+	InVertexID  string
+	OutVertexID string
+	Label       string                 // can be empty
+	Prop        map[string]interface{} // can be nil
+}
+
+func toEdge(emap map[string]interface{}) *Edge {
+	eid, ok := emap["_id"].(string)
+	if !ok {
+		return nil
+	}
+	inv, ok := emap["_inV"].(string)
+	if !ok {
+		return nil
+	}
+	outv, ok := emap["_outV"].(string)
+	if !ok {
+		return nil
+	}
+	label, _ := emap["_label"].(string)
+	eprop, _ := emap["_properties"].(map[string]interface{})
+	return &Edge{eid, inv, outv, label, eprop}
 }
