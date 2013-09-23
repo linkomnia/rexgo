@@ -168,6 +168,9 @@ func (client *Client) Execute(script string, bindings map[string]interface{}) (r
 	if err != nil {
 		return nil, err
 	}
+	if len(args) < 1 {
+		return nil, nil
+	}
 
 	results, ok := args[0].([]interface{})
 	if !ok {
@@ -212,6 +215,9 @@ func (s *Session) Execute(script string, bindings map[string]interface{}) (resul
 	_, _, _, args, err = s.client.rx.Call(sid, rexpro0.MsgScriptRequest, meta, args)
 	if err != nil {
 		return nil, err
+	}
+	if len(args) < 1 {
+		return nil, nil
 	}
 
 	results, ok := args[0].([]interface{})
