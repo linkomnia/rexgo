@@ -176,9 +176,8 @@ func (client *Client) Execute(script string, bindings map[string]interface{}) (r
 	if !ok {
 		results = make([]interface{}, 1)
 		results[0] = args[0]
-	} else {
-		decodeVerticesAndEdges(results)
 	}
+	decodeVerticesAndEdges(results)
 	return results, nil
 }
 
@@ -224,9 +223,8 @@ func (s *Session) Execute(script string, bindings map[string]interface{}) (resul
 	if !ok {
 		results = make([]interface{}, 1)
 		results[0] = args[0]
-	} else {
-		decodeVerticesAndEdges(results)
 	}
+	decodeVerticesAndEdges(results)
 	return results, nil
 }
 
