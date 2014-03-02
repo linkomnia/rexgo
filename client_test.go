@@ -2,9 +2,9 @@ package rexgo
 
 import "testing"
 
-func TestDial(t *testing.T) {
+func TestOpen(t *testing.T) {
 	addr := "localhost:8184"
-	rx, err := Dial(addr)
+	rx, err := Open(addr)
 	if err != nil {
 		t.Fatalf("Dial(%v) returned %v", addr, err)
 	}
@@ -13,7 +13,7 @@ func TestDial(t *testing.T) {
 
 func TestSession(t *testing.T) {
 	addr := "localhost:8184"
-	rx, err := Dial(addr)
+	rx, err := Open(addr)
 	if err != nil {
 		t.Fatalf("client.Dial(%v) returned %v", addr, err)
 	}
@@ -56,7 +56,7 @@ func TestSession(t *testing.T) {
 }
 
 func TestGraphOfGods(t *testing.T) {
-	rx, err := Dial("localhost:8184")
+	rx, err := Open("localhost:8184")
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
