@@ -17,11 +17,13 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Dial(%v) returned %v", addr, err)
 	}
+	defer rx.Close()
 
 	s, err := rx.NewSession()
 	if err != nil {
 		t.Fatalf("client.NewSession() returned %v", err)
 	}
+	defer s.Close()
 
 	obj, err := s.Execute(`[name:var1]`, map[string]interface{}{"var1": "value1"})
 	if err != nil {
@@ -51,8 +53,6 @@ func TestSession(t *testing.T) {
 	if err != nil {
 		t.Fatalf("session.Close() returned %v", err)
 	}
-
-	rx.Close()
 }
 
 func TestGraphOfGods(t *testing.T) {
@@ -60,6 +60,7 @@ func TestGraphOfGods(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+	defer rx.Close()
 
 	rx.SetGraphName("graph")
 
@@ -68,9 +69,11 @@ func TestGraphOfGods(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+	if len(obj) < 1 {
+		t.Errorf(`no objects returned`)
+		return
+	}
 	if obj[0] != "hercules" {
 		t.Errorf(`Saturn's grandchild expected to be Hercules, got: %#v`, obj)
 	}
-
-	rx.Close()
 }

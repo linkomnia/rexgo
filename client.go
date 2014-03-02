@@ -4,11 +4,11 @@
 
 /*
 Package rexgo is a Rexster client for Go using the binary RexPro protocol.
-The actual RexPro version 0 wire protocol is implemented in the package
-"net/rexpro0".
+The actual RexPro version 1 wire protocol is implemented in the package
+"net/rexpro1".
 
-Note that only RexPro version 0 is implemented at this time. This means Rexster
-2.4.0 and newer are not supported.
+Note that only RexPro version 1 is implemented at this time. This means Rexster
+versions older than 2.4.0 are not supported.
 
 This package uses the excellent codec from ugorji for MsgPack serialization:
 https://github.com/ugorji/go/tree/master/codec
@@ -18,11 +18,9 @@ see: https://github.com/tinkerpop/rexster/wiki
 */
 package rexgo
 
-// BUG(roger.so): RexPro version 1 is not implemented.
-
 import (
 	"errors"
-	"github.com/linkomnia/rexgo/net/rexpro0"
+	"github.com/linkomnia/rexgo/net/rexpro1"
 	"sync"
 )
 
@@ -35,13 +33,13 @@ var (
 type Client struct {
 	GraphName    string // The default name of the graph to work on. Optional.
 	GraphObjName string // The variable name of the graph object specified by GraphName. Defaults to "g".
-	rx           *rexpro0.Client
+	rx           *rexpro1.Client
 	mutex        sync.Mutex
 }
 
 // Dial connects to a Rexster server at the specified network address.
 func Dial(addr string) (*Client, error) {
-	rx, err := rexpro0.Dial(addr)
+	rx, err := rexpro1.Dial(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +65,8 @@ func (client *Client) SetGraphObjName(objName string) {
 	client.mutex.Unlock()
 }
 
-func (client *Client) newMetaMap() rexpro0.MetaMap {
-	meta := make(rexpro0.MetaMap)
+func (client *Client) newMetaMap() rexpro1.MetaMap {
+	meta := make(rexpro1.MetaMap)
 
 	client.mutex.Lock()
 	gname := client.GraphName
@@ -104,9 +102,9 @@ func (client *Client) NewSession() (*Session, error) {
 // NewSessionWithAuth asks the server to establish a new session. Variable bindings are preserved across Script requests within an open session.
 func (client *Client) NewSessionWithAuth(username string, password string) (session *Session, err error) {
 	meta := client.newMetaMap()
-	args := []interface{}{rexpro0.ChannelMsgPack, username, password}
+	args := []interface{}{username, password}
 
-	sid, _, _, _, err := client.rx.Call(rexpro0.EmptySession, rexpro0.MsgSessionRequest, meta, args)
+	sid, _, _, _, err := client.rx.Call(rexpro1.EmptySession, rexpro1.MsgSessionRequest, meta, args)
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +121,12 @@ func (client *Client) NewSessionWithAuth(username string, password string) (sess
 func (s *Session) Close() error {
 	meta := s.client.newMetaMap()
 	meta["killSession"] = true
-	args := []interface{}{rexpro0.ChannelMsgPack, "", ""}
+	args := []interface{}{"", ""}
 
 	s.mutex.Lock()
 	sid := s.Id
 	s.mutex.Unlock()
-	_, _, _, _, err := s.client.rx.Call(sid, rexpro0.MsgSessionRequest, meta, args)
+	_, _, _, _, err := s.client.rx.Call(sid, rexpro1.MsgSessionRequest, meta, args)
 	return err
 }
 
@@ -164,7 +162,7 @@ func (client *Client) Execute(script string, bindings map[string]interface{}) (r
 	meta := client.newMetaMap()
 	args := []interface{}{"groovy", script, bindings}
 
-	_, _, _, args, err = client.rx.Call(rexpro0.EmptySession, rexpro0.MsgScriptRequest, meta, args)
+	_, _, _, args, err = client.rx.Call(rexpro1.EmptySession, rexpro1.MsgScriptRequest, meta, args)
 	if err != nil {
 		return nil, err
 	}
@@ -181,8 +179,8 @@ func (client *Client) Execute(script string, bindings map[string]interface{}) (r
 	return results, nil
 }
 
-func (s *Session) newMetaMap() rexpro0.MetaMap {
-	meta := make(rexpro0.MetaMap)
+func (s *Session) newMetaMap() rexpro1.MetaMap {
+	meta := make(rexpro1.MetaMap)
 
 	s.mutex.Lock()
 	gname := s.GraphName
@@ -211,7 +209,7 @@ func (s *Session) Execute(script string, bindings map[string]interface{}) (resul
 	s.mutex.Lock()
 	sid := s.Id
 	s.mutex.Unlock()
-	_, _, _, args, err = s.client.rx.Call(sid, rexpro0.MsgScriptRequest, meta, args)
+	_, _, _, args, err = s.client.rx.Call(sid, rexpro1.MsgScriptRequest, meta, args)
 	if err != nil {
 		return nil, err
 	}
